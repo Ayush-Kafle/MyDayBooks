@@ -70,16 +70,11 @@ function clock(){const d=new Date();$('#clock').textContent=d.toLocaleTimeString
 clock();setInterval(clock,30000);
 function renderSelectedDay(){
   const date=dateForOffset(selectedDayOffset);
-  const labels=[['yesterdaySwitch',-1],['todaySwitch',0],['tomorrowSwitch',1]];
   $('#weekday').textContent=date.toLocaleDateString([],{weekday:'long'});
   $('#dateTitle').textContent=date.toLocaleDateString([],{month:'long',day:'numeric'});
-  $('#selectedDayTitle').textContent=selectedDayOffset===0?'Today':selectedDayOffset<0?'Yesterday':'Tomorrow';
-  for(const [id,offset] of labels){
-    const button=$(`#${id}`);
-    button.textContent=offset===0?'Today':`${offset<0?'Yesterday':'Tomorrow'} · ${dateForOffset(offset).toLocaleDateString([],{weekday:'short'})}`;
-    button.classList.toggle('active',offset===selectedDayOffset);
-    button.setAttribute('aria-selected',String(offset===selectedDayOffset));
-  }
+  const dayName=selectedDayOffset===0?'Today':selectedDayOffset<0?'Yesterday':'Tomorrow';
+  $('#selectedDayTitle').textContent=dayName;
+  $('#selectedDayTab').textContent=dayName;
   const daily=dailyRecord();
   $('#nowText').innerHTML=selectedDayOffset===0?'Now <strong>Short focus block</strong> until 10:30 AM':`${selectedDayOffset<0?'Yesterday’s schedule':'Tomorrow’s plan'} <strong>${escapeHtml(daily.dayShape||'No shift selected')}</strong>`;
   $('#thenText').textContent=selectedDayOffset===0?'Then Head to work at 10:30 AM':`Schedule · ${daily.dayShape||'No shift selected'}`;
@@ -92,10 +87,48 @@ function renderDailyInputs(){
   $('#dayShape').value=dailyRecord().dayShape||'';
   $('#tomorrowShape').value=dailyRecord(1).dayShape||'';
 }
-function selectDay(offset){
-  if(offset < -1 || offset > 1 || offset===selectedDayOffset)return;
-  selectedDayOffset=offset;
-  renderDailyInputs();
+let dayTransitioning=false;
+async function selectDay(offset){
+  if(dayTransitioning||offset < -1||offset > 1||offset===selectedDayOffset)return;
+  const direction=offset>selectedDayOffset?1:-1;
+  const targets=[$('#selectedDayTab'),$('.now-card'),$('.dayhead>div:first-child'),$('.today-grid')];
+  const blocks=$$('.time-block');
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  dayTransitioning=true;
+  try{
+    if(!reducedMotion){
+      const outgoing=[
+        ...targets.map(element=>element.animate(
+          [{opacity:1,transform:'translateX(0)'},{opacity:0,transform:`translateX(${-direction*14}px)`}],
+          {duration:120,easing:'ease-in',fill:'both'}
+        )),
+        ...blocks.map((element,index)=>element.animate(
+          [{opacity:1,transform:'translateX(0)'},{opacity:.35,transform:`translateX(${-direction*18}px)`}],
+          {duration:170,delay:index*28,easing:'ease-in',fill:'both'}
+        ))
+      ];
+      await new Promise(resolve=>setTimeout(resolve,226));
+      outgoing.forEach(animation=>animation.cancel());
+    }
+    selectedDayOffset=offset;
+    renderDailyInputs();
+    if(!reducedMotion){
+      const incoming=[
+        ...targets.map(element=>element.animate(
+          [{opacity:0,transform:`translateX(${direction*18}px)`},{opacity:1,transform:'translateX(0)'}],
+          {duration:240,easing:'cubic-bezier(.2,.75,.25,1)',fill:'both'}
+        )),
+        ...blocks.map((element,index)=>element.animate(
+          [{opacity:.4,transform:`translateX(${direction*24}px)`},{opacity:1,transform:'translateX(0)'}],
+          {duration:280,delay:index*28,easing:'cubic-bezier(.2,.75,.25,1)',fill:'both'}
+        ))
+      ];
+      await new Promise(resolve=>setTimeout(resolve,336));
+      incoming.forEach(animation=>animation.cancel());
+    }
+  }finally{
+    dayTransitioning=false;
+  }
 }
 $('#timelineTrack').innerHTML=['<div class="time-block focus"></div>','<div class="time-block work"></div>','<div class="time-block sleep"></div>'].join('');
 const schedule=[['8:30 AM','Wake · water, no phone'],['8:45 AM','Sadhana'],['9:15 AM','Breakfast'],['9:45 AM','Short focus block'],['10:30 AM','Head to work'],['11:00 AM','Work'],['9:00 PM','Off · dinner'],['9:45 PM','Call home · check in'],['10:30 PM','Free time'],['11:45 PM','Wind down, screens off'],['12:15 AM','Sleep']];
@@ -110,14 +143,50 @@ const energy=$('#energyButtons');energy.onclick=e=>{if(e.target.dataset.n){daily
 function renderTodos(){const count=state.todos.filter(t=>!t.done).length;$('#todoCount').textContent=count||'';$('#todoList').innerHTML=state.todos.map((t,i)=>`<div class="todo-item"><input type="checkbox" ${t.done?'checked':''} data-done="${i}"><input value="${t.text.replace(/"/g,'&quot;')}" data-text="${i}"><button data-del="${i}">Delete</button></div>`).join('');renderComing()}function renderComing(){const t=state.todos.find(t=>!t.done);$('#comingTask').innerHTML=t?`<div class="coming-task"><button data-coming="1"></button><div><div>${t.text}</div><div class="task-meta"><span class="tag">Personal</span><span class="tag">Nov 21</span></div></div></div>`:''}renderTodos();$('#todoList').onclick=e=>{const i=e.target.dataset.done;if(i!==undefined){state.todos[+i].done=e.target.checked;persist();renderTodos()}if(e.target.dataset.del!==undefined){state.todos.splice(+e.target.dataset.del,1);persist();renderTodos()}if(e.target.dataset.text!==undefined){}};$('#todoList').oninput=e=>{if(e.target.dataset.text!==undefined){state.todos[+e.target.dataset.text].text=e.target.value;persist();renderComing()}};$('#addTodo').onclick=()=>{state.todos.push({text:'New task',done:false,meta:'Personal'});persist();renderTodos()};
 $('#comingTask').onclick=e=>{if(e.target.dataset.coming){const t=state.todos.find(t=>!t.done);if(t){t.done=true;persist();renderTodos()}}};$('#allTodos').onclick=()=>activateTab('todo');
 function activateTab(name){$$('.section-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));$$('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===name))}$$('.section-tabs button').forEach(b=>b.onclick=()=>activateTab(b.dataset.tab));
-let swipeStart=null,ignoreDayClickUntil=0;
-$('#yesterdaySwitch').onclick=()=>{if(Date.now()>=ignoreDayClickUntil)selectDay(-1)};
-$('#todaySwitch').onclick=()=>{if(Date.now()>=ignoreDayClickUntil)selectDay(0)};
-$('#tomorrowSwitch').onclick=()=>{if(Date.now()>=ignoreDayClickUntil)selectDay(1)};
-const timelineSection=$('.timeline-section');
-timelineSection.addEventListener('pointerdown',event=>{if(event.target.closest('select,input,textarea')&&!event.target.closest('.day-switch'))return;swipeStart={x:event.clientX,y:event.clientY}});
-timelineSection.addEventListener('pointerup',event=>{if(!swipeStart)return;const deltaX=event.clientX-swipeStart.x,deltaY=event.clientY-swipeStart.y;swipeStart=null;if(Math.abs(deltaX)>40&&Math.abs(deltaX)>Math.abs(deltaY)){ignoreDayClickUntil=Date.now()+500;selectDay(selectedDayOffset+(deltaX<0?1:-1))}});
-timelineSection.addEventListener('pointercancel',()=>{swipeStart=null});
+let swipeStart=null,wheelDistance=0,wheelResetTimer,lastWheelNavigationAt=0;
+const daySwipeAreas=[$('#timelineTrack'),$('#selectedDayTab')];
+function canSwipeFrom(target){
+  return target instanceof Element&&!target.closest('select,input,textarea');
+}
+function beginSwipe(x,y,target){
+  if(!canSwipeFrom(target))return;
+  swipeStart={x,y};
+}
+function finishSwipe(x,y){
+  if(!swipeStart)return;
+  const deltaX=x-swipeStart.x,deltaY=y-swipeStart.y;
+  swipeStart=null;
+  if(Math.abs(deltaX)>40&&Math.abs(deltaX)>Math.abs(deltaY))selectDay(selectedDayOffset+(deltaX<0?1:-1));
+}
+for(const daySwipeArea of daySwipeAreas){
+  daySwipeArea.addEventListener('touchstart',event=>{
+    const touch=event.changedTouches[0];
+    if(touch)beginSwipe(touch.clientX,touch.clientY,event.target);
+  },{passive:true});
+  daySwipeArea.addEventListener('touchend',event=>{
+    const touch=event.changedTouches[0];
+    if(touch)finishSwipe(touch.clientX,touch.clientY);
+  },{passive:true});
+  daySwipeArea.addEventListener('touchcancel',()=>{swipeStart=null},{passive:true});
+  daySwipeArea.addEventListener('pointerdown',event=>{
+    if(event.pointerType==='mouse')beginSwipe(event.clientX,event.clientY,event.target);
+  });
+  daySwipeArea.addEventListener('pointerup',event=>{
+    if(event.pointerType==='mouse')finishSwipe(event.clientX,event.clientY);
+  });
+  daySwipeArea.addEventListener('pointercancel',()=>{swipeStart=null});
+  daySwipeArea.addEventListener('wheel',event=>{
+    if(Math.abs(event.deltaX)<=Math.abs(event.deltaY)||!canSwipeFrom(event.target))return;
+    wheelDistance+=event.deltaX;
+    clearTimeout(wheelResetTimer);
+    wheelResetTimer=setTimeout(()=>{wheelDistance=0},160);
+    if(Math.abs(wheelDistance)>=45&&Date.now()-lastWheelNavigationAt>500){
+      selectDay(selectedDayOffset+(wheelDistance>0?1:-1));
+      wheelDistance=0;
+      lastWheelNavigationAt=Date.now();
+    }
+  },{passive:true});
+}
 $('#journalInput').value=state.journal;$('#journalInput').oninput=e=>{state.journal=e.target.value;persist()};$('#backInput').value=state.back;$('#backInput').oninput=e=>{state.back=e.target.value;persist()};
 $('#closeDay').onclick=()=>{window.alert('Day closed. Your check-in and priorities are saved.')};
 const days=[['Mon','Night shift','0/8'],['Tue','Night again','0/8'],['Wed','Recovery','0/8'],['Thu','2:30–9','0/8'],['Fri','2:30–9','5/8'],['Sat','11–9','0/8'],['Sun','11–9','—']];$('#weekGrid').innerHTML=days.map(d=>`<div class="week-day"><strong>${d[0]} 16</strong><span>${d[1]}</span><small>${d[2]}</small></div>`).join('');

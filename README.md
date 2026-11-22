@@ -21,7 +21,7 @@ Keep the Terminal window open while using the app. Closing it stops the local se
 - The SQLite database is `data/daybook.sqlite3`.
 - The existing Claude export is kept as archived records in that database, separate from the editable daybook state.
 - Edits to priorities, check-ins, tasks, Journal, and Looking back are saved to SQLite automatically. The browser keeps a local copy as a fallback.
-- In the timeline, swipe left or right to move between yesterday, today, and tomorrow. Each date has its own priorities, check-ins, energy, note, and schedule shape; navigation stays within those three days.
+- Swipe left or right on the timeline block or selected-day label to move between yesterday, today, and tomorrow. On a trackpad, use a horizontal swipe over either area. Each date has its own priorities, check-ins, energy, note, and schedule shape, and navigation stays within those three days.
 - Use **SQLite backup** to download a complete copy of the database.
 - Use **JSON backup** for a portable export of the archived sections and current editable state.
 - The **Fun** tab can refresh upcoming Cincinnati and Northern Kentucky events from Visit Cincy and Cincinnati Zoo public calendars. The first check starts when the local server starts, then checks weekly while it is running; failed sources are retried daily. Use **Refresh suggestions** to check immediately. Each suggestion links to its source, and source failures are shown without deleting that source's saved results.

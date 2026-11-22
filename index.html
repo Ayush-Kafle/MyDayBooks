@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ayush's Daybook</title>
-  <link rel="stylesheet" href="styles.css?v=light18" />
+  <link rel="stylesheet" href="styles.css?v=light24" />
 </head>
 <body>
   <header class="topbar">
@@ -35,10 +35,8 @@
     </section>
     <p class="storage-status" id="storageStatus" role="status">Connecting to local database…</p>
     <section class="timeline-section" aria-label="Day timeline">
-      <div class="day-switch" role="tablist" aria-label="Choose a day">
-        <button id="yesterdaySwitch" role="tab">Yesterday</button>
-        <button id="todaySwitch" class="active" role="tab" aria-selected="true">Today</button>
-        <button id="tomorrowSwitch" role="tab">Tomorrow</button>
+      <div class="day-switch" role="tablist" aria-label="Selected day">
+        <span id="selectedDayTab" class="active" role="tab" aria-selected="true">Today</span>
       </div>
       <div class="now-card"><span id="nowText">Now <strong>Short focus block</strong> until 10:30 AM</span><span id="thenText">Then Head to work at 10:30 AM</span></div>
       <div class="timeline-wrap">
@@ -103,6 +101,6 @@
     <section id="routine" class="tab-panel"><article class="card"><h2>Your week</h2><p>Which shape each day usually has.</p><div id="routineGrid" class="routine-grid"></div></article></section>
   </main>
 
-  <script src="app.js?v=swipe2"></script>
+  <script src="app.js?v=swipe6"></script>
 </body>
 </html>

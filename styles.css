@@ -51,8 +51,8 @@ body{background:#fff;color:var(--text);font-size:16px}
 .storage-status:not(.storage-error){display:none}
 .timeline-section{margin-top:20px}
 .day-switch{gap:30px;border-bottom:0;padding:0}
-.day-switch button{font-size:16px;color:#929893;padding:8px 0 10px}
-.day-switch button.active{color:#252a27;border-bottom:2px solid #47745f}
+.day-switch [role=tab]{display:inline-block;font-size:16px;color:#929893;padding:8px 0 10px}
+.day-switch [role=tab].active{color:#252a27;border-bottom:2px solid #47745f}
 .now-card{display:flex;align-items:flex-start;flex-direction:column;gap:5px;margin:10px 0 4px}
 .now-card>span:first-child{font-size:18px}
 .now-card>span:last-child{font-size:16px;color:#838a85}
@@ -225,13 +225,13 @@ body{background:#fff;color:var(--text);font-size:16px}
 .event-list{grid-template-columns:minmax(0,1fr);gap:0}
 .event-card+.event-card{border-top:1px solid #edf0ed}
 .tab-panel :focus-visible,.today-grid :focus-visible{outline:2px solid #799a83;outline-offset:2px}
-.shell{max-width:920px;padding-top:32px}
+.shell{max-width:920px;padding-top:32px;overflow-x:clip}
 .topbar{padding-left:max(14px,calc((100% - 920px)/2 + 28px));padding-right:max(14px,calc((100% - 920px)/2 + 28px))}
 .today-grid,.today-grid>.card,.tab-panel>.card{width:100%;max-width:none}
-.timeline-section,.day-switch{touch-action:pan-y}
+.timeline-track,#selectedDayTab{touch-action:pan-y}
 .timeline-track.not-today:after{display:none}
 @media(max-width:800px){
   .topbar{padding-left:14px;padding-right:14px}
   .day-switch{gap:20px}
-  .day-switch button{font-size:14px}
+  .day-switch [role=tab]{font-size:14px}
 }
